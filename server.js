@@ -67,6 +67,7 @@ class Kunde{
 		// IstEingeloggt ist ein boolean.
 		// Der Wert ist entweder wahr oder falsch.
 		this.IstEingeloggt
+		this.Telefonnummer // Neue Eigenschaft für die Telefonnummer
 	}
 }
 
@@ -298,7 +299,12 @@ app.get('/profil', (req, res) => {
 		// Wenn die Zugangsdaten korrekt sind, dann wird die angesurfte Seite gerendert.
 		res.render('profil.ejs',{
 			Meldung: "",
-			Email: kunde.Mail
+			Email: kunde.Mail,
+			Nachname: kunde.Nachname,
+			Vorname: kunde.Vorname,
+			Benutzername: kunde.Benutzername,
+			Telefonnummer: kunde.Telefonnummer
+			// ...weitere Eigenschaften nach Bedarf...
 		});
 
 	}else{
@@ -337,7 +343,11 @@ app.post('/profil', (req, res) => {
 		// Die profil-Seite wird gerendert.
 		res.render('profil.ejs',{
 			Meldung: meldung,
-			Email: ""
+			Email: kunde.Mail, // Hier wird die aktuelle Mail-Adresse des Kunden übergeben
+			Nachname: kunde.Nachname,
+			Vorname: kunde.Vorname,
+			Benutzername: kunde.Benutzername,
+			Telefonnummer: kunde.Telefonnummer
 		});
 
 	}else{
@@ -376,28 +386,34 @@ app.get('/kreditBeantragen', (req, res) => {
 	}
 });
 
-
 // Kommentar: 
 app.post('/kreditBeantragen', (req, res) => {
 
 	// Kommentar:
+	// Die Werte für Kreditbetrag, Laufzeit und Zinssatz werden aus dem Request-Body gelesen und in Variablen gespeichert.
+	// Dadurch stehen die Benutzereingaben für die weitere Berechnung zur Verfügung.
 	let zinsbetrag = req.body.Betrag;
 	let laufzeit = req.body.Laufzeit;
 	let zinssatz = req.body.Zinssatz;
 
-	// Kommentar:
+	// Der Rückzahlungsbetrag wird mit der Zinseszinsformel berechnet.
+	// Das Ergebnis wird in der Variablen 'kredit' gespeichert.
 	let kredit = zinsbetrag * Math.pow(1+zinssatz/100,laufzeit);
+	let kreditGerundet = kredit.toFixed(2); // Das Ergebnis wird kaufmännisch auf zwei Nachkommastellen gerundet und als String gespeichert.
 	
-	// Kommentar:
-	console.log("Rückzahlungsbetrag: " + kredit + " €.")
+	// Der berechnete Rückzahlungsbetrag wird in der Konsole ausgegeben.
+	// Dies dient der Kontrolle und dem Debugging während der Entwicklung.
+	console.log("Rückzahlungsbetrag: " + kreditGerundet + " €.")
 
-	// Kommentar:
+	// Die Seite 'kreditBeantragen.ejs' wird mit den berechneten und eingegebenen Werten gerendert.
+	// Die Werte werden an die View übergeben, damit sie dem Nutzer angezeigt werden können.
 	res.render('kreditBeantragen.ejs',{
 		Laufzeit: laufzeit,
 		Zinssatz: zinssatz,		
 		Betrag: zinsbetrag,
-		// Kommentar:
-		Meldung: "Rückzahlungsbetrag: " + kredit + " €."
+		// Die Meldung mit dem Rückzahlungsbetrag wird an die View übergeben.
+		// So sieht der Nutzer das Ergebnis seiner Anfrage direkt auf der Seite.
+		Meldung: "Rückzahlungsbetrag: " + kreditGerundet + " €."
 	});
 });
 
@@ -599,8 +615,31 @@ app.post('/login', (req, res) => {
 	}
 });
 
-
-
+app.post('/profil/telefon', (req, res) => {
+    var meldung = "";
+    if(kunde.IstEingeloggt){
+        let telefon = req.body.Telefonnummer;
+        // Einfache Prüfung: Telefonnummer darf nicht leer sein
+        if(telefon && telefon.length > 0){
+            kunde.Telefonnummer = telefon;
+            meldung = "Telefonnummer erfolgreich geändert.";
+        } else {
+            meldung = "Bitte geben Sie eine gültige Telefonnummer ein.";
+        }
+        res.render('profil.ejs',{
+            Meldung: meldung,
+            Email: kunde.Mail,
+            Nachname: kunde.Nachname,
+            Vorname: kunde.Vorname,
+            Benutzername: kunde.Benutzername,
+            Telefonnummer: kunde.Telefonnummer
+        });
+    } else {
+        res.render('login.ejs',{
+            Meldung: "Melden Sie sich zuerst an."
+        });
+    }
+});
 
 // Mit listen() wird der Server angewiesen, auf den angegebenen Host und
 // Port zu lauschen.  
